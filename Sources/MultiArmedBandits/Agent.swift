@@ -1,23 +1,12 @@
 struct Agent {
     let epsilon: Double
-    var sumOfRewardsForAction: [Double]
+    var estimatedValues: [Double]
     var actionCounts: [Int]
 
     init(armCount: Int, epsilon: Double) {
         self.epsilon = epsilon
-        self.sumOfRewardsForAction = [Double](repeating: 0.0, count: armCount)
+        self.estimatedValues = [Double](repeating: 0.0, count: armCount)
         self.actionCounts = [Int](repeating: 0, count: armCount)
-    }
-
-    var estimatedValues: [Double] {
-        return zip(sumOfRewardsForAction, actionCounts)
-            .map { sumOfRewards, actionCount in
-                if actionCount == 0 {
-                    return 0.0
-                } else {
-                    return sumOfRewards / Double(actionCount)
-                }
-            }
     }
 
     func nextAction() -> Int {
@@ -34,11 +23,15 @@ struct Agent {
     }
 
     var totalReward: Double {
-        self.sumOfRewardsForAction.reduce(0, +)
+        zip(estimatedValues, actionCounts)
+          .map { estimatedValue, actionCount in
+              estimatedValue * Double(actionCount)
+          }
+          .reduce(0, +)
     }
 
     mutating func update(action: Int, reward: Double) {
-        sumOfRewardsForAction[action] += reward
         actionCounts[action] += 1
+        estimatedValues[action] += (reward - estimatedValues[action]) / Double(actionCounts[action])
     }
 }
