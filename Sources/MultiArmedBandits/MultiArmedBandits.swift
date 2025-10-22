@@ -3,45 +3,50 @@
 import Foundation
 
 @main
-struct multi_armed_bandits {
-    static func main() {
-        let stepCount = 1000
-        let runCount = 2000
-        let armCount = 10
-        let epsilons = [0.1, 0.01, 0]
+struct MultiArmedBandits {
+    static let stepCount = 1000
+    static let runCount = 2000
+    static let armCount = 10
 
-        var averageRewards = Scorecard(rowCount: stepCount, columnCount: epsilons.count)
+    static func run(
+        scorecard: inout Scorecard,
+        columnIndex: Int,
+        exploration: Double,
+        unstationality: Double
+    ) {
+        for _ in 0..<runCount {
+            var problem = Problem(armCount: armCount, unstationality: unstationality)
+            var agent = Agent(armCount: armCount, epsilon: exploration)
+            for step in 0..<stepCount {
+                let action = agent.nextAction()
+                let reward = problem.reward(action: action)
+                agent.update(action: action, reward: reward)
 
-        for (testCaseIndex, epsilon) in epsilons.enumerated() {
-            for _ in 0..<runCount {
-                let problem = Problem(armCount: armCount)
-                var agent = Agent(armCount: armCount, epsilon: epsilon)
-                for step in 0..<stepCount {
-                    let action = agent.nextAction()
-                    let reward = problem.reward(action: action)
-                    agent.update(action: action, reward: reward)
-
-                    let averageReward = step == 0 ? 0 : agent.totalReward / Double(step)
-                    averageRewards.add(
-                        score: averageReward,
-                        row: step,
-                        column: testCaseIndex)
-                }
+                let averageReward = step == 0 ? 0 : agent.totalReward / Double(step)
+                scorecard.add(
+                    score: averageReward,
+                    row: step,
+                    column: columnIndex)
             }
         }
+    }
 
-        let fileURL = URL(fileURLWithPath: "averageRewards.txt")
-        averageRewards.write(to: fileURL)
+    static func main() {
+        let explorations = [0.1, 0.01, 0]
+        var scorecardByExploration = Scorecard(
+            baseName: "by_exploration",
+            title: "Average Performance of ε-greedy action-value method",
+            rowCount: stepCount,
+            columns: ["ε = 0.1", "ε = 0.01", "ε = 0.0"])
 
-        let gnuplot = """
-            set title 'Average Performance of ε-greedy action-value method'
-            set xlabel "Steps"
-            set ylabel "Average Reward"
-            plot 'averageRewards.txt' \
-            using 0:1 with line lc 'blue' title 'epsilon=0.1', \
-            '' using 0:2 with line lc 'red' title 'epsilon=0.01', \
-            '' using 0:3 with line lc 'green' title 'epsilon=0.0'
-            """
-        print(gnuplot)
+        for (testCaseIndex, exploration) in explorations.enumerated() {
+            run(
+                scorecard: &scorecardByExploration,
+                columnIndex: testCaseIndex,
+                exploration: exploration,
+                unstationality: 0.0)
+        }
+
+        scorecardByExploration.write()
     }
 }
