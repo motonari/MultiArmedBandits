@@ -31,22 +31,29 @@ struct MultiArmedBandits {
         }
     }
 
-    static func main() {
-        let explorations = [0.1, 0.01, 0]
+    static func epsilonGreedyTest(unstationality: Double) {
+        let explorations = [0.3, 0.1, 0.01, 0]
+        let stationalityString = unstationality > 0 ? "unstationaly" : "stationaly"
         var scorecardByExploration = Scorecard(
-            baseName: "by_exploration",
-            title: "Average Performance of ε-greedy action-value method",
-            rowCount: stepCount,
-            columns: ["ε = 0.1", "ε = 0.01", "ε = 0.0"])
-
+          baseName: stationalityString,
+          title: "Average Performance of ε-greedy action-value method with \(stationalityString) problem",
+          rowCount: stepCount,
+          columns: ["ε = 0.3", "ε = 0.1", "ε = 0.01", "ε = 0.0"])
+        
         for (testCaseIndex, exploration) in explorations.enumerated() {
             run(
                 scorecard: &scorecardByExploration,
                 columnIndex: testCaseIndex,
                 exploration: exploration,
-                unstationality: 0.0)
+                unstationality: unstationality)
         }
 
         scorecardByExploration.write()
+    }
+
+    
+    static func main() {
+        epsilonGreedyTest(unstationality: 0.0)
+        epsilonGreedyTest(unstationality: 0.01)
     }
 }

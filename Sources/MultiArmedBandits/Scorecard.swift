@@ -50,7 +50,7 @@ struct Scorecard {
             plot
           """
 
-        let colors = ["blue", "red", "green"]
+        let colors = ["yellow", "blue", "red", "green"]
         for (index, columnTitle) in columns.enumerated() {
             command += "$data using 0:\(index+1) with line lc '\(colors[index])' title '\(columnTitle)',"
         }
