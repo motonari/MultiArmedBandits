@@ -1,6 +1,6 @@
 import Foundation
 
-struct Scorecard {
+actor Scorecard {
     let baseName: String
     let title: String
     let columns: [String]
@@ -24,7 +24,7 @@ struct Scorecard {
         self.count = Array(repeating: defaultCountRow, count: rowCount)
     }
 
-    mutating func add(score: Double, row: Int, column: Int) {
+    func add(score: Double, row: Int, column: Int) {
         count[row][column] += 1
         data[row][column] =
             data[row][column] + (score - data[row][column]) / Double(count[row][column])
@@ -50,7 +50,7 @@ struct Scorecard {
             plot
           """
 
-        let colors = ["yellow", "blue", "red", "green"]
+        let colors = ["blue", "red", "green"]
         for (index, columnTitle) in columns.enumerated() {
             command += "$data using 0:\(index+1) with line lc '\(colors[index])' title '\(columnTitle)',"
         }

@@ -18,7 +18,7 @@ struct Problem {
         }
 
         if Double.random(in: 0.0..<1.0) < unstationality {
-            self.values = Self.newValues(armCount: armCount)
+            values = Self.newValues(armCount: armCount)
         }
 
         return normallyDistributedRandom(mean: values[action], standardDeviation: 1.0)

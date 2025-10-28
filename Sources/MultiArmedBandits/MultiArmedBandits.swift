@@ -4,56 +4,102 @@ import Foundation
 
 @main
 struct MultiArmedBandits {
-    static let stepCount = 1000
-    static let runCount = 2000
     static let armCount = 10
 
     static func run(
-        scorecard: inout Scorecard,
+        scorecard: Scorecard,
         columnIndex: Int,
-        exploration: Double,
-        unstationality: Double
-    ) {
+        testCase: TestCase,
+        stepCount: Int,
+        runCount: Int
+    ) async {
         for _ in 0..<runCount {
-            var problem = Problem(armCount: armCount, unstationality: unstationality)
-            var agent = Agent(armCount: armCount, epsilon: exploration)
+            var problem = Problem(armCount: armCount, unstationality: testCase.unstationality)
+            var agent = Agent(armCount: armCount, epsilon: testCase.exploration, stepSize: testCase.stepSize)
             for step in 0..<stepCount {
                 let action = agent.nextAction()
                 let reward = problem.reward(action: action)
                 agent.update(action: action, reward: reward)
 
                 let averageReward = step == 0 ? 0 : agent.totalReward / Double(step)
-                scorecard.add(
+                await scorecard.add(
                     score: averageReward,
                     row: step,
                     column: columnIndex)
             }
         }
     }
-
-    static func epsilonGreedyTest(unstationality: Double) {
-        let explorations = [0.3, 0.1, 0.01, 0]
-        let stationalityString = unstationality > 0 ? "unstationaly" : "stationaly"
-        var scorecardByExploration = Scorecard(
-          baseName: stationalityString,
-          title: "Average Performance of ε-greedy action-value method with \(stationalityString) problem",
-          rowCount: stepCount,
-          columns: ["ε = 0.3", "ε = 0.1", "ε = 0.01", "ε = 0.0"])
-        
-        for (testCaseIndex, exploration) in explorations.enumerated() {
-            run(
-                scorecard: &scorecardByExploration,
-                columnIndex: testCaseIndex,
-                exploration: exploration,
-                unstationality: unstationality)
-        }
-
-        scorecardByExploration.write()
-    }
-
     
-    static func main() {
-        epsilonGreedyTest(unstationality: 0.0)
-        epsilonGreedyTest(unstationality: 0.01)
+    static func epsilonGreedyTest(
+      baseName: String,
+      title: String,
+      testCases: [TestCase],
+      stepCount: Int,
+      runCount: Int
+    ) async {
+        let scorecard = Scorecard(
+          baseName: baseName,
+          title: title,
+          rowCount: stepCount,
+          columns: testCases.map(\.title))
+
+        await withTaskGroup(
+          of: Void.self,
+          returning: Void.self
+        ){ group in 
+            for (testCaseIndex, testCase) in testCases.enumerated() {
+                group.addTask {
+                    await run(
+                      scorecard: scorecard,
+                      columnIndex: testCaseIndex,
+                      testCase: testCase,
+                      stepCount: stepCount,
+                      runCount: runCount)
+                }
+            }
+            for await _ in group {}
+        }
+        
+        await scorecard.write()
+    }
+    
+    static func main() async {
+        await epsilonGreedyTest(
+          baseName: "stationaly",
+          title: "Average Performance of ε-greedy action-value method with stationaly problem",
+          testCases: [
+            TestCase(title: "ε=0.10", exploration: 0.10, stepSize: .average, unstationality: 0.0),
+            TestCase(title: "ε=0.01", exploration: 0.01, stepSize: .average, unstationality: 0.0),
+            TestCase(title: "ε=0.00", exploration: 0.00, stepSize: .average, unstationality: 0.0),
+          ],
+          stepCount: 1000,
+          runCount: 2000
+        )
+
+        await epsilonGreedyTest(
+          baseName: "stepSize",
+          title: "Average Performance of different step sizes with unstationaly problem",
+          testCases: [
+            TestCase(title: "average",
+                     exploration: 0.01,
+                     stepSize: .average,
+                     unstationality: 0.001
+            ),
+            
+            TestCase(title: "step size 0.1",
+                     exploration: 0.01,
+                     stepSize: .fixed(alpha: 0.1),
+                     unstationality: 0.001
+            ),
+            
+            TestCase(title: "step size 0.5",
+                     exploration: 0.01,
+                     stepSize: .fixed(alpha: 0.5),
+                     unstationality: 0.001
+            ),
+          ],
+          stepCount: 10000,
+          runCount: 200
+        )
     }
 }

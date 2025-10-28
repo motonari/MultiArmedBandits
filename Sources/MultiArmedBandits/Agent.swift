@@ -1,12 +1,19 @@
+enum StepSize {
+    case average
+    case fixed(alpha: Double)
+}
+
 struct Agent {
     let epsilon: Double
+    let stepSize: StepSize
     var estimatedValues: [Double]
     var actionCounts: [Int]
 
-    init(armCount: Int, epsilon: Double) {
+    init(armCount: Int, epsilon: Double, stepSize: StepSize) {
         self.epsilon = epsilon
         self.estimatedValues = [Double](repeating: 0.0, count: armCount)
         self.actionCounts = [Int](repeating: 0, count: armCount)
+        self.stepSize = stepSize
     }
 
     func nextAction() -> Int {
@@ -32,6 +39,15 @@ struct Agent {
 
     mutating func update(action: Int, reward: Double) {
         actionCounts[action] += 1
-        estimatedValues[action] += (reward - estimatedValues[action]) / Double(actionCounts[action])
+
+        var alpha = 0.0
+        switch stepSize {
+        case .average:
+            alpha = 1.0 / Double(actionCounts[action])
+        case .fixed(let stepSizeAlpha):
+            alpha = stepSizeAlpha
+        }
+        
+        estimatedValues[action] += (reward - estimatedValues[action]) * alpha
     }
 }
