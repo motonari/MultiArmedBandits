@@ -9,9 +9,9 @@ struct Agent {
     var estimatedValues: [Double]
     var actionCounts: [Int]
 
-    init(armCount: Int, epsilon: Double, stepSize: StepSize) {
+    init(armCount: Int, epsilon: Double, stepSize: StepSize, initialValue: Double) {
         self.epsilon = epsilon
-        self.estimatedValues = [Double](repeating: 0.0, count: armCount)
+        self.estimatedValues = [Double](repeating: initialValue, count: armCount)
         self.actionCounts = [Int](repeating: 0, count: armCount)
         self.stepSize = stepSize
     }
@@ -31,10 +31,10 @@ struct Agent {
 
     var totalReward: Double {
         zip(estimatedValues, actionCounts)
-          .map { estimatedValue, actionCount in
-              estimatedValue * Double(actionCount)
-          }
-          .reduce(0, +)
+            .map { estimatedValue, actionCount in
+                estimatedValue * Double(actionCount)
+            }
+            .reduce(0, +)
     }
 
     mutating func update(action: Int, reward: Double) {
@@ -47,7 +47,7 @@ struct Agent {
         case .fixed(let stepSizeAlpha):
             alpha = stepSizeAlpha
         }
-        
+
         estimatedValues[action] += (reward - estimatedValues[action]) * alpha
     }
 }
