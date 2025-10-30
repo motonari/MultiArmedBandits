@@ -68,9 +68,9 @@ struct MultiArmedBandits {
           baseName: "stationaly",
           title: "Average Performance of ε-greedy action-value method with stationaly problem",
           testCases: [
-            TestCase(title: "ε=0.10", exploration: 0.10, stepSize: .average, unstationality: 0.0),
-            TestCase(title: "ε=0.01", exploration: 0.01, stepSize: .average, unstationality: 0.0),
-            TestCase(title: "ε=0.00", exploration: 0.00, stepSize: .average, unstationality: 0.0),
+            TestCase(title: "ε=0.10", exploration: 0.10, stepSize: .average, unstationality: false),
+            TestCase(title: "ε=0.01", exploration: 0.01, stepSize: .average, unstationality: false),
+            TestCase(title: "ε=0.00", exploration: 0.00, stepSize: .average, unstationality: false),
           ],
           stepCount: 1000,
           runCount: 2000
@@ -81,21 +81,21 @@ struct MultiArmedBandits {
           title: "Average Performance of different step sizes with unstationaly problem",
           testCases: [
             TestCase(title: "average",
-                     exploration: 0.01,
+                     exploration: 0.1,
                      stepSize: .average,
-                     unstationality: 0.001
+                     unstationality: true
             ),
             
             TestCase(title: "step size 0.1",
-                     exploration: 0.01,
+                     exploration: 0.1,
                      stepSize: .fixed(alpha: 0.1),
-                     unstationality: 0.001
+                     unstationality: true
             ),
             
             TestCase(title: "step size 0.5",
-                     exploration: 0.01,
+                     exploration: 0.1,
                      stepSize: .fixed(alpha: 0.5),
-                     unstationality: 0.001
+                     unstationality: true
             ),
           ],
           stepCount: 10000,
